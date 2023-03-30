@@ -1,0 +1,223 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters: 
+ userTableName: 
+  Type: String
+  Default: "prod.CS.Users"
+ eventsTableName: 
+  Type: String
+  Default: "prod.CS.Events"
+Resources: 
+
+#########################################
+#
+# USER TABLE
+#  
+#########################################
+
+ UserTable: 
+  Type: "AWS::DynamoDB::Table"
+  Properties: 
+   TableName: 
+    Ref: userTableName
+   AttributeDefinitions: 
+    - 
+     AttributeName: userId
+     AttributeType: S
+    - 
+     AttributeName: email
+     AttributeType: S
+    - 
+     AttributeName: gamerTagName
+     AttributeType: S
+    - 
+     AttributeName: gamerTagId
+     AttributeType: N
+   KeySchema: 
+    - 
+     AttributeName: userId
+     KeyType: HASH
+   ProvisionedThroughput: 
+    ReadCapacityUnits: 5
+    WriteCapacityUnits: 5
+   GlobalSecondaryIndexes: 
+    - 
+     IndexName: gamerTagIndex
+     KeySchema: 
+      - 
+       AttributeName: gamerTagName
+       KeyType: HASH
+      - 
+       AttributeName: gamerTagId
+       KeyType: RANGE
+     Projection: 
+      ProjectionType: ALL
+     ProvisionedThroughput: 
+      ReadCapacityUnits: 5
+      WriteCapacityUnits: 5
+    - 
+     IndexName: emailIndex
+     KeySchema: 
+      - 
+       AttributeName: email
+       KeyType: HASH
+     Projection: 
+      ProjectionType: ALL
+     ProvisionedThroughput: 
+      ReadCapacityUnits: 5
+      WriteCapacityUnits: 4
+ UserTableWriteCapacityScalableTarget: 
+  Type: "AWS::ApplicationAutoScaling::ScalableTarget"
+  DependsOn: UserTable
+  Properties: 
+   MaxCapacity: 100
+   MinCapacity: 5   
+   ResourceId: !Sub table/${userTableName}
+   RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+   ScalableDimension: "dynamodb:table:WriteCapacityUnits"
+   ServiceNamespace: dynamodb
+ UserTableWriteScalingPolicy: 
+  Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+  Properties: 
+   PolicyName: WriteAutoScalingPolicy
+   PolicyType: TargetTrackingScaling
+   ScalingTargetId: 
+    Ref: UserTableWriteCapacityScalableTarget
+   TargetTrackingScalingPolicyConfiguration: 
+     TargetValue: 70
+     ScaleInCooldown: 60
+     ScaleOutCooldown: 60
+     PredefinedMetricSpecification: 
+      PredefinedMetricType: DynamoDBWriteCapacityUtilization
+ UserTableReadCapacityScalableTarget: 
+  Type: "AWS::ApplicationAutoScaling::ScalableTarget"
+  DependsOn: UserTable
+  Properties: 
+   MaxCapacity: 100
+   MinCapacity: 5   
+   ResourceId: !Sub table/${userTableName}
+   RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+   ScalableDimension: "dynamodb:table:ReadCapacityUnits"
+   ServiceNamespace: dynamodb
+ UserTableReadScalingPolicy: 
+  Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+  Properties: 
+   PolicyName: ReadAutoScalingPolicy
+   PolicyType: TargetTrackingScaling
+   ScalingTargetId: 
+    Ref: UserTableReadCapacityScalableTarget
+   TargetTrackingScalingPolicyConfiguration: 
+     TargetValue: 70
+     ScaleInCooldown: 60
+     ScaleOutCooldown: 60
+     PredefinedMetricSpecification: 
+      PredefinedMetricType: DynamoDBReadCapacityUtilization
+
+#########################################
+#
+# EVENTS TABLE
+#  
+#########################################
+
+ EventsTable: 
+  Type: "AWS::DynamoDB::Table"
+  Properties: 
+   TableName: 
+    Ref: eventsTableName
+   AttributeDefinitions: 
+    - 
+     AttributeName: eventId
+     AttributeType: S
+    - 
+     AttributeName: status
+     AttributeType: S
+    - 
+     AttributeName: gameType
+     AttributeType: S
+    - 
+     AttributeName: createdAt
+     AttributeType: S
+   KeySchema: 
+    - 
+     AttributeName: eventId
+     KeyType: HASH
+    - 
+     AttributeName: createdAt
+     KeyType: RANGE
+   ProvisionedThroughput: 
+    ReadCapacityUnits: 5
+    WriteCapacityUnits: 5
+   GlobalSecondaryIndexes: 
+    - 
+     IndexName: gameTypeIndex
+     KeySchema: 
+      - 
+       AttributeName: gameType
+       KeyType: HASH
+      - 
+       AttributeName: createdAt
+       KeyType: RANGE
+     Projection: 
+      ProjectionType: ALL
+     ProvisionedThroughput: 
+      ReadCapacityUnits: 5
+      WriteCapacityUnits: 5
+    - 
+     IndexName: statusIndex
+     KeySchema: 
+      - 
+       AttributeName: status
+       KeyType: HASH
+      - 
+       AttributeName: createdAt
+       KeyType: RANGE
+     Projection: 
+      ProjectionType: ALL
+     ProvisionedThroughput: 
+      ReadCapacityUnits: 5
+      WriteCapacityUnits: 5
+ EventsTableWriteCapacityScalableTarget: 
+  Type: "AWS::ApplicationAutoScaling::ScalableTarget"
+  DependsOn: EventsTable
+  Properties: 
+   MaxCapacity: 100
+   MinCapacity: 5   
+   ResourceId: !Sub table/${eventsTableName}
+   RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+   ScalableDimension: "dynamodb:table:WriteCapacityUnits"
+   ServiceNamespace: dynamodb
+ EventsTableWriteScalingPolicy: 
+  Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+  Properties: 
+   PolicyName: WriteAutoScalingPolicy
+   PolicyType: TargetTrackingScaling
+   ScalingTargetId: 
+    Ref: EventsTableWriteCapacityScalableTarget
+   TargetTrackingScalingPolicyConfiguration: 
+     TargetValue: 70
+     ScaleInCooldown: 60
+     ScaleOutCooldown: 60
+     PredefinedMetricSpecification: 
+      PredefinedMetricType: DynamoDBWriteCapacityUtilization
+ EventsTableReadCapacityScalableTarget: 
+  Type: "AWS::ApplicationAutoScaling::ScalableTarget"
+  DependsOn: EventsTable
+  Properties: 
+   MaxCapacity: 100
+   MinCapacity: 5   
+   ResourceId: !Sub table/${eventsTableName}
+   RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+   ScalableDimension: "dynamodb:table:ReadCapacityUnits"
+   ServiceNamespace: dynamodb
+ EventsTableReadScalingPolicy: 
+  Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+  Properties: 
+   PolicyName: ReadAutoScalingPolicy
+   PolicyType: TargetTrackingScaling
+   ScalingTargetId: 
+    Ref: EventsTableReadCapacityScalableTarget
+   TargetTrackingScalingPolicyConfiguration: 
+     TargetValue: 70
+     ScaleInCooldown: 60
+     ScaleOutCooldown: 60
+     PredefinedMetricSpecification: 
+      PredefinedMetricType: DynamoDBReadCapacityUtilization

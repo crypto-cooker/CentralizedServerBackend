@@ -1,0 +1,134 @@
+---
+Parameters:
+  apiGatewayName:
+    Type: String
+    Default: central-services-backend
+  prodStageName:
+    Type: String
+    AllowedPattern: "[a-z0-9]+"
+    Default: prod
+  authLambdaArn:
+    Type: String
+    Default: arn:aws:lambda:us-west-2:903733074442:function:CsAuthLambda
+
+Resources:
+
+  apiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Description: Api Gateway to skatex services
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Name: !Ref apiGatewayName
+
+  v1RootResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt apiGateway.RootResourceId
+      RestApiId: !Ref apiGateway
+      PathPart: v1
+
+  userRootResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref v1RootResource
+      RestApiId: !Ref apiGateway
+      PathPart: user
+
+###########################
+#
+# AuthLambda
+#
+###########################      
+
+  authRootResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref v1RootResource
+      RestApiId: !Ref apiGateway
+      PathPart: auth
+
+  authProxyResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref authRootResource
+      RestApiId: !Ref apiGateway
+      PathPart: '{proxy+}'
+
+  authProxyMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: ANY
+      ResourceId: !Ref authProxyResource
+      RestApiId: !Ref apiGateway
+      AuthorizationType: NONE
+      RequestParameters:
+        method.request.path.proxy: true
+      Integration:
+        CacheKeyParameters:
+          - 'method.request.path.proxy'
+        RequestParameters:
+          integration.request.path.proxy: 'method.request.path.proxy'
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        PassthroughBehavior: WHEN_NO_MATCH
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !Ref authLambdaArn
+
+  authInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref authLambdaArn
+      Principal: apigateway.amazonaws.com
+
+###########################
+#
+# CORS Configs
+#
+########################### 
+
+  EnableCorsForUserApis:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref apiGateway
+      ResourceId: !Ref userRootResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+
+###########################
+#
+# prodDeployment
+#
+########################### 
+
+  prodApiGatewayDeploymnet:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - authProxyMethod
+    Properties:
+      RestApiId: !Ref apiGateway
+      StageName: !Ref prodStageName

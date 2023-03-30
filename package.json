@@ -1,0 +1,29 @@
+{
+  "name": "central-services-backend",
+  "version": "1.0.0",
+  "description": "This repo holds the logic, infrastructure and CI/CD for central services backend functions",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Block-Tackle/central-services-backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Block-Tackle/central-services-backend/issues"
+  },
+  "homepage": "https://github.com/Block-Tackle/central-services-backend#readme",
+  "devDependencies": {
+    "aws-sdk-mock": "^5.8.0",
+    "jest": "^29.3.1"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1244.0",
+    "handlebars": "^4.7.7",
+    "nodemailer": "^6.9.1",
+    "nodemailer-mailgun-transport": "^2.1.5"
+  }
+}

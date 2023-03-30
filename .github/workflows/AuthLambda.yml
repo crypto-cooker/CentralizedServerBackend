@@ -1,0 +1,59 @@
+name: "CsAuthLambda"
+
+on:
+  push:
+    paths:
+      - Services/v1/Lambdas/AuthLambda/**
+      - Services/v1/DataAccessLayer/**
+      - Services/v1/Common/**
+  pull_request:
+
+jobs:
+  CsAuthLambdaInfrastructure:
+    name: "CsAuthLambda Production Deployment"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Credential Setup
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Deploy Lambda Infra
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
+        with:
+          name: CsAuthLambda
+          template: Services/v1/Lambdas/AuthLambda/Infrastructure/AuthLambda.yml
+          no-fail-on-empty-changeset: "1"
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: npm install and build
+        continue-on-error: true
+        run: |
+          cd Services
+          cd v1
+          npm ci
+        env:
+          CI: true
+
+      - name: zip
+        uses: montudor/action-zip@v0.1.0
+        with:
+          args: zip -qq -r ./bundle-cs-auth.zip ./
+
+      - name: Deploy Lambda Code
+        uses: appleboy/lambda-action@master
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: us-west-2
+          function_name: CsAuthLambda
+          zip_file: bundle-cs-auth.zip

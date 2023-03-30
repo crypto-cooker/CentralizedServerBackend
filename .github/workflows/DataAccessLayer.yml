@@ -1,0 +1,27 @@
+name: "CsDataAccessLayer"
+
+on:
+  push:
+    paths:
+      - Services/v1/DataAccessLayer/Infrastructure/**
+  pull_request:
+
+jobs:
+  CsDataAccessLayerInfrastructure:
+    name: "CsDataAccessLayer Production Deployment"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Credential Setup
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+      - name: Deploy DataAccessLayer Infra
+        uses: aws-actions/aws-cloudformation-github-deploy@v1.0.3
+        with:
+          name: CsDataAccessLayer
+          template: Services/v1/DataAccessLayer/Infrastructure/main.yml
+          no-fail-on-empty-changeset: "1"

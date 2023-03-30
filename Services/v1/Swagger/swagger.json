@@ -1,0 +1,544 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "API documentation for central-services-backend. Call the Login endpoint to get your Access Token, which you can paste in the 'Authorize' Button",
+    "version": "1.0.6",
+    "title": "Central Services Backend",
+    "termsOfService": "http://blocktackle.io",
+    "contact": {
+      "email": "adam@blocktackle.io"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "64edih52t4.execute-api.us-west-2.amazonaws.com/prod",
+  "basePath": "/v1",
+  "tags": [{
+      "name": "Authorization APIs",
+      "description": "APIs related to authorizations and tokens"
+    }
+  ],
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "paths": {
+    "/auth/login/": {
+      "put": {
+        "tags": [
+          "Authorization APIs"
+        ],
+        "summary": "Logs a user in",
+        "description": "",
+        "consumes": [
+          "text/plain;charset=UTF-8"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [{
+            "in": "body",
+            "name": "body",
+            "description": "Login Params",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/loginRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "valid input",
+            "schema": {
+              "$ref": "#/definitions/loginResponse"
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "put": {
+        "tags": [
+          "Authorization APIs"
+        ],
+        "summary": "Logs a user out, invalidating all past tokens",
+        "description": "",
+        "consumes": [
+          "text/plain;charset=UTF-8"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "security": [{
+          "Bearer": []
+        }],        
+        "responses": {
+          "200": {
+            "description": "valid input",
+            "schema": {
+              "$ref": "#/definitions/okResponse"
+            }
+          }
+        }
+      }
+    },
+    "/auth/register/": {
+      "put": {
+        "tags": [
+          "Authorization APIs"
+        ],
+        "summary": "Registers a new user",
+        "description": "",
+        "consumes": [
+          "text/plain;charset=UTF-8"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [{
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/registerRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "valid input",
+            "schema": {
+              "$ref": "#/definitions/registerResponse"
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/auth/verify-email/": {
+      "put": {
+        "tags": [
+          "Authorization APIs"
+        ],
+        "summary": "Verifies a User's email",
+        "description": "Verifies a User's email",
+        "consumes": [
+          "text/plain;charset=UTF-8"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [{
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/verifyEmailRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "valid input",
+            "schema": {
+              "$ref": "#/definitions/okResponse"
+            }
+          },
+          "403": {
+            "description": "Invalid verificationCode",
+            "schema": {
+              "$ref": "#/definitions/invalidRequest"
+            }            
+          }
+        }
+      }
+    },
+    "/auth/forgot-password/": {
+      "put": {
+        "tags": [
+          "Authorization APIs"
+        ],
+        "summary": "Send an email to a user with a link to a page that will allow them to reset their password",
+        "description": "Send an email to a user with a link to a page that will allow them to reset their password",
+        "consumes": [
+          "text/plain;charset=UTF-8"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [{
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/forgotPasswordRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "valid input",
+            "schema": {
+              "$ref": "#/definitions/okResponse"
+            }
+          }
+        }
+      }
+    },
+    "/auth/set-new-password/": {
+      "put": {
+        "tags": [
+          "Authorization APIs"
+        ],
+        "summary": "Sets a user's new password after it has been requested via forgot-password endpoint",
+        "description": "Sets a user's new password after it has been requested via forgot-password endpoint",
+        "consumes": [
+          "text/plain;charset=UTF-8"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [{
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/setPasswordRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "valid input",
+            "schema": {
+              "$ref": "#/definitions/loginResponse"
+            }
+          },
+          "403": {
+            "description": "Invalid passwordCode",
+            "schema": {
+              "$ref": "#/definitions/invalidRequest"
+            }            
+          }
+        }
+      }
+    },
+    "/auth/is-email-available/": {
+      "put": {
+        "tags": [
+          "Authorization APIs"
+        ],
+        "summary": "Checks if an email is available to be registered",
+        "description": "",
+        "consumes": [
+          "text/plain;charset=UTF-8"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [{
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/emailAvailableRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "valid input",
+            "schema": {
+              "$ref": "#/definitions/emailAvailableResponse"
+            }
+          },
+          "409": {
+            "description": "Invalid input",
+            "schema": {
+              "$ref": "#/definitions/emailNotAvailableResponse"
+            }
+          }
+        }
+      }
+    },
+    "/auth/resend-email-verification": {
+      "put": {
+        "tags": [
+          "Authorization APIs"
+        ],
+        "summary": "Re-sends the email verification",
+        "description": "",
+        "consumes": [
+          "text/plain;charset=UTF-8"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [{
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/emailAvailableRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "valid input",
+            "schema": {
+              "$ref": "#/definitions/okResponse"
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/auth/gamertag-reminder": {
+      "put": {
+        "tags": [
+          "Authorization APIs"
+        ],
+        "summary": "Send an email to a user with a reminder of their gamertag",
+        "description": "",
+        "consumes": [
+          "text/plain;charset=UTF-8"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [{
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/emailAvailableRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "valid input",
+            "schema": {
+              "$ref": "#/definitions/okResponse"
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Enter the token with the `Bearer: ` prefix, e.g. \"Bearer abcde12345\"."
+    }
+  },
+  "definitions": {
+    "loginRequest": {
+      "type": "object",
+      "required": [
+        "identifier",
+        "password"
+      ],
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "example": "adam@blocktackle.io"
+        },
+        "password": {
+          "type": "string",
+          "example": "password"
+        }
+      }
+    },
+    "loginResponse": {
+      "type": "object",
+      "properties": {
+        "response": {
+          "type": "object",
+          "properties": {
+            "token": {
+              "type": "string",
+              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImY0N2MzNzIxLWJmNzEtNDQ4Yy05NTkzLWM4NDI5NTkxNTlmZSIsImlhdCI6MTY3MTA1MDAzMCwiZXhwIjoxNjcxMTM2NDMwfQ.uhhuKyP-U8MqPROwVTvD_DFHT_6SeQY7jBBBtjUQPZ8"
+            }
+          }
+        }
+      }
+    },
+    "registerRequest": {
+      "type": "object",
+      "required": [
+        "username",
+        "password"
+      ],
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "adamsEmail@blocktackle.io"
+        },
+        "password": {
+          "type": "string",
+          "example": "password123"
+        },
+        "gamertag": {
+          "type": "string",
+          "example": "saladAuthority"
+        },
+        "dob": {
+          "type": "string",
+          "example": "03/21/1991"
+        },
+        "promotionalOptIn": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "registerResponse": {
+      "type": "object",
+      "properties": {
+        "response": {
+          "type": "object",
+          "properties": {
+            "gamertag": {
+              "type": "string",
+              "example": "saladAuthority#1"
+            },
+            "email": {
+              "type": "string",
+              "example": "adamsEmail@blocktackle.io"
+            },
+            "dob": {
+              "type": "string",
+              "example": "03/21/1991"
+            }
+          }
+        }
+      }
+    },
+    "emailAvailableRequest": {
+      "type": "object",
+      "required": [
+        "email"
+      ],
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "adam@blocktackle.io"
+        }
+      }
+    },
+    "emailAvailableResponse": {
+      "type": "object",
+      "properties": {
+        "response": {
+          "type": "string",
+          "example": "OK"
+        }
+      }
+    },
+    "emailNotAvailableResponse": {
+      "type": "object",
+      "properties": {
+        "response": {
+          "type": "string",
+          "example": "email already exists"
+        }
+      }
+    },
+    "invalidRequest": {
+      "type": "object",
+      "properties": {
+        "response": {
+          "type": "string",
+          "example": "invalid response"
+        }
+      }
+    },
+    "forgotPasswordRequest": {
+      "type": "object",
+      "required": [
+        "email"
+      ],
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "adam@blocktackle.io"
+        }
+      }
+    },
+    "setPasswordRequest": {
+      "type": "object",
+      "required": [
+        "email",
+        "passwordCode",
+        "password"
+      ],
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "adam@blocktackle.io"
+        },
+        "password": {
+          "type": "string",
+          "example": "asdf"
+        },        
+        "passwordCode": {
+          "type": "string",
+          "example": "152353"
+        }
+      }
+    },
+    "verifyEmailRequest": {
+      "type": "object",
+      "required": [
+        "email",
+        "verificationCode"
+      ],
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "adam@blocktackle.io"
+        },
+        "verificationCode": {
+          "type": "string",
+          "example": "152353"
+        }
+      }
+    },
+    "okResponse": {
+      "type": "object",
+      "properties": {
+        "response": {
+          "type": "string",
+          "example": "OK"
+        }
+      }      
+    }
+  },
+  "externalDocs": {
+    "description": "Find out more about Swagger",
+    "url": "http://swagger.io"
+  }
+}

@@ -1,0 +1,80 @@
+---
+Parameters:
+  lambdaFunctionName:
+    Type: String
+    AllowedPattern: "[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+"
+    Default: CsEventsLambda
+  lambdaDescription:
+    Type: String
+    Default: This lambda provides CRUD APIs related to Events and Leaderboards + event winner calculations
+
+Resources:
+  LambdaExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+        Version: '2012-10-17'
+      Path: "/"
+      Policies:
+      - PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Action: dynamodb:*
+            Effect: Allow
+            Resource: "*"
+          - Action: s3:*
+            Effect: Allow
+            Resource: "*"
+          - Effect: Allow
+            Action:
+            - logs:CreateLogStream
+            - logs:CreateLogGroup
+            - logs:PutLogEvents
+            Resource:
+            - "*"
+          - Effect: Allow
+            Action:
+            - cloudwatch:PutMetricAlarm
+            - cloudwatch:PutMetricData
+            Resource:
+            - "*"         
+        PolicyName: root
+    Type: AWS::IAM::Role
+  LambdaFunction:
+    Properties:
+      Description: !Ref lambdaDescription
+      FunctionName: !Ref lambdaFunctionName      
+      Code:
+        ZipFile: return;
+      Handler: Services/v1/Lambdas/EventsLambda/index.handler
+      MemorySize: 128
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Runtime: nodejs12.x
+      Timeout: 900     
+    Type: AWS::Lambda::Function
+  CsEventsLambdaAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmDescription: "Alarm if the API returns any 500s"
+        Namespace: "AWS/Lambda"
+        MetricName: "Errors"
+        Dimensions:
+        - Name: "FunctionName"
+          Value: "CsEventsLambda"
+        Statistic: "Sum"
+        ComparisonOperator: "GreaterThanThreshold"
+        Threshold: 0
+        EvaluationPeriods: 1
+        Period: 60
+        TreatMissingData: "missing"
+        AlarmActions:
+          - arn:aws:sns:us-west-2:903733074442:SkateXAlarms
